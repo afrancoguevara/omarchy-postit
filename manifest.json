@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "afrancoguevara.postit",
+  "name": "Post-it",
+  "version": "1.0.0",
+  "author": "afrancoguevara",
+  "license": "MIT",
+  "description": "Post-it drawer on the bar for quick notes, appended to a Markdown file you open in Omawrite",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Post-it",
+    "description": "Quick notes saved to Markdown for Omawrite",
+    "category": "Productivity",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "schema": [
+      { "key": "file", "type": "string", "label": "Notes file" },
+      { "key": "language", "type": "string", "label": "Language (auto, en, es)" }
+    ]
+  }
+}
