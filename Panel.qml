@@ -80,18 +80,22 @@ Panel {
     statusTimer.restart()
   }
 
-  // Args: $1 file, $2 note text, $3 document title for a new file.
+  // Args: $1 file, $2 document title for a new file. The note text goes over
+  // stdin, never argv, so it doesn't show up in process listings.
   function save() {
     var text = noteArea.text.replace(/\s+$/, "")
     if (text.trim() === "" || saveProc.running) return
+    saveProc.pendingText = text
+    saveProc.stdinEnabled = true
     saveProc.command = [
       "bash", "-c",
       "set -e\n" +
       "f=\"$1\"\n" +
+      "note=$(cat)\n" +
       "mkdir -p \"$(dirname \"$f\")\"\n" +
-      "[ -s \"$f\" ] || printf '# %s\\n' \"$3\" > \"$f\"\n" +
-      "printf '\\n## %s\\n\\n%s\\n' \"$(date '+%Y-%m-%d %H:%M')\" \"$2\" >> \"$f\"",
-      "postit", root.notesFile, text, root.strings.fileTitle
+      "[ -s \"$f\" ] || printf '# %s\\n' \"$2\" > \"$f\"\n" +
+      "printf '\\n## %s\\n\\n%s\\n' \"$(date '+%Y-%m-%d %H:%M')\" \"$note\" >> \"$f\"",
+      "postit", root.notesFile, root.strings.fileTitle
     ]
     saveProc.running = true
   }
@@ -105,7 +109,15 @@ Panel {
 
   Process {
     id: saveProc
+    property string pendingText: ""
+    stdinEnabled: true
     stderr: StdioCollector { id: saveErr; waitForEnd: true }
+    // Write the note, then close stdin so `cat` sees EOF.
+    onStarted: {
+      saveProc.write(saveProc.pendingText)
+      saveProc.pendingText = ""
+      saveProc.stdinEnabled = false
+    }
     onExited: function(exitCode) {
       if (exitCode === 0) {
         noteArea.text = ""
